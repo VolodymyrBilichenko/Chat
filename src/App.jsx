@@ -1,47 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const App = () => {
-  const [messages, setMessages] = useState([]);  // Стан для повідомлень
-  const [input, setInput] = useState('');        // Стан для введеного тексту
-  const socketRef = useRef(null);                // Посилання на WebSocket
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [name, setName] = useState(''); // Стан для імені користувача
+  const socketRef = useRef(null);
 
-  // Підключення WebSocket при завантаженні компоненту
   useEffect(() => {
     socketRef.current = new WebSocket('wss://tx6t6n-3005.csb.app');
 
     socketRef.current.onmessage = (event) => {
-      // Перевірка на Blob і обробка
-      if (event.data instanceof Blob) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          setMessages((prevMessages) => [...prevMessages, reader.result]); // Додаємо текст повідомлення
-        };
-        reader.readAsText(event.data); 
-      } else {
-        setMessages((prevMessages) => [...prevMessages, event.data]); // Додаємо текст повідомлення
-      }
+      const messageData = JSON.parse(event.data); // Розпарсити повідомлення
+      setMessages((prevMessages) => [...prevMessages, messageData]);
     };
 
-    // Закриваємо WebSocket при розмонтаженні компоненту
     return () => {
       socketRef.current.close();
     };
   }, []);
 
-  // Відправка повідомлення
   const sendMessage = () => {
-    if (input && socketRef.current) {
-      socketRef.current.send(input); // Відправка введеного тексту
-      setInput('');  // Очищення поля введення після відправки
+    if (input && name && socketRef.current) {
+      const message = { name, text: input };  // Включити ім'я в повідомлення
+      socketRef.current.send(JSON.stringify(message));  // Відправити JSON-форматоване повідомлення
+      setInput('');
     }
   };
 
   return (
     <div style={{ padding: '20px' }}>
       <h1>Chat</h1>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Enter your name..."
+        style={{ padding: '10px', width: '300px', marginBottom: '10px' }}
+      />
       <ul>
         {messages.map((message, index) => (
-          <li key={index}>{message}</li>
+          <li key={index}>
+            <strong>{message.name}:</strong> {message.text}
+          </li>
         ))}
       </ul>
       <input
