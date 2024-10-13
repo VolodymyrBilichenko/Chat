@@ -16,7 +16,7 @@ const App = () => {
         reader.onload = () => {
           setMessages((prevMessages) => [...prevMessages, reader.result]); // Додаємо текст повідомлення
         };
-        reader.readAsText(event.data); // Конвертуємо Blob в текст
+        reader.readAsText(event.data); 
       } else {
         setMessages((prevMessages) => [...prevMessages, event.data]); // Додаємо текст повідомлення
       }
